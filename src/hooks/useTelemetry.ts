@@ -16,6 +16,7 @@ interface TelemetryData {
   fuel_mix: string;
   energy_per_ton_kwh: number;
   thermal_substitution_rate: number;
+  time?: string;
 }
 
 interface Trends {
@@ -30,6 +31,7 @@ interface Trends {
 export const useTelemetry = () => {
   const [latestData, setLatestData] = useState<TelemetryData | null>(null);
   const [trends, setTrends] = useState<Trends | null>(null);
+  const [history, setHistory] = useState<TelemetryData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,6 +40,8 @@ export const useTelemetry = () => {
       const baseEnergy = 94 + Math.random() * 8; // 94-102 kWh/ton
       const basePower = 1200 + Math.random() * 150; // 1200-1350 kW
       const baseThroughput = 80 + Math.random() * 10; // 80-90 TPH
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
       return {
         timestamp: new Date().toISOString(),
@@ -58,7 +62,8 @@ export const useTelemetry = () => {
           { fuel: 'petcoke', '%': 18 + Math.random() * 4 }
         ]),
         energy_per_ton_kwh: baseEnergy,
-        thermal_substitution_rate: 24 + Math.random() * 8
+        thermal_substitution_rate: 24 + Math.random() * 8,
+        time: timeStr
       };
     };
 
@@ -72,18 +77,25 @@ export const useTelemetry = () => {
     });
 
     // Initial load
-    setLatestData(generateSyntheticData());
+    const initialData = generateSyntheticData();
+    setLatestData(initialData);
+    setHistory([initialData]);
     setTrends(generateTrends());
     setLoading(false);
 
     // Update telemetry every 5 seconds (simulating real-time updates)
     const interval = setInterval(() => {
-      setLatestData(generateSyntheticData());
+      const newData = generateSyntheticData();
+      setLatestData(newData);
+      setHistory(prev => {
+        const updated = [...prev, newData];
+        return updated.slice(-20); // Keep last 20 data points
+      });
       setTrends(generateTrends());
     }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  return { latestData, trends, loading };
+  return { latestData, trends, loading, history };
 };

@@ -2,9 +2,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, Zap, Flame, Gauge, TrendingDown, TrendingUp } from 'lucide-react';
 import { useTelemetry } from '@/hooks/useTelemetry';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const TelemetryDashboard = () => {
-  const { latestData, trends, loading } = useTelemetry();
+  const { latestData, trends, loading, history } = useTelemetry();
 
   const metrics = [
     {
@@ -199,6 +200,170 @@ const TelemetryDashboard = () => {
           ))}
         </div>
       </Card>
+
+      {/* Live Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Energy Efficiency Trend */}
+        <Card className="p-6 bg-gradient-surface border-border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            Energy Efficiency Trend
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={history}>
+              <defs>
+                <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="time" 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+                domain={[85, 100]}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="energy_per_ton_kwh" 
+                stroke="hsl(var(--primary))" 
+                fill="url(#energyGradient)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Kiln Temperature */}
+        <Card className="p-6 bg-gradient-surface border-border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Flame className="h-5 w-5 text-primary" />
+            Kiln Temperature Profile
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={history}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="time" 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+                domain={[1350, 1450]}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="kiln_temp_c" 
+                stroke="hsl(var(--warning))" 
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Mill Power & Throughput */}
+        <Card className="p-6 bg-gradient-surface border-border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Mill Performance
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={history}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="time" 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="mill_power_kw" 
+                stroke="hsl(var(--primary))" 
+                strokeWidth={2}
+                dot={false}
+                name="Power (kW)"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="mill_throughput_tph" 
+                stroke="hsl(var(--success))" 
+                strokeWidth={2}
+                dot={false}
+                name="Throughput (TPH)"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Thermal Substitution Rate */}
+        <Card className="p-6 bg-gradient-surface border-border">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Gauge className="h-5 w-5 text-primary" />
+            Thermal Substitution Rate
+          </h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={history.slice(-10)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="time" 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={12}
+                domain={[0, 40]}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar 
+                dataKey="thermal_substitution_rate" 
+                fill="hsl(var(--success))"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      </div>
     </div>
   );
 };

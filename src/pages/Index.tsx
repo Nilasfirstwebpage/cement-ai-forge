@@ -5,7 +5,8 @@ import TelemetryDashboard from '@/components/dashboard/TelemetryDashboard';
 import OptimizationPanel from '@/components/dashboard/OptimizationPanel';
 import ChatAssistant from '@/components/dashboard/ChatAssistant';
 import SystemHealth from '@/components/dashboard/SystemHealth';
-import { Activity, Brain, MessageSquare, Shield } from 'lucide-react';
+import AgentsOverview from '@/components/dashboard/AgentsOverview';
+import { Activity, Brain, MessageSquare, Shield, Network } from 'lucide-react';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('telemetry');
@@ -37,7 +38,7 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-3 bg-card">
+          <TabsList className="grid w-full max-w-3xl grid-cols-4 bg-card">
             <TabsTrigger value="telemetry" className="gap-2">
               <Activity className="h-4 w-4" />
               Real-Time Telemetry
@@ -49,6 +50,10 @@ const Index = () => {
             <TabsTrigger value="assistant" className="gap-2">
               <MessageSquare className="h-4 w-4" />
               Operator Assistant
+            </TabsTrigger>
+            <TabsTrigger value="agents" className="gap-2">
+              <Network className="h-4 w-4" />
+              System Overview
             </TabsTrigger>
           </TabsList>
 
@@ -62,6 +67,10 @@ const Index = () => {
 
           <TabsContent value="assistant" className="mt-6">
             <ChatAssistant />
+          </TabsContent>
+
+          <TabsContent value="agents" className="mt-6">
+            <AgentsOverview />
           </TabsContent>
         </Tabs>
       </main>
