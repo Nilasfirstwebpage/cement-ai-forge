@@ -97,64 +97,64 @@ const AgentsOverview = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* System Architecture Overview */}
-      <Card className="p-6 bg-gradient-surface border-border">
-        <div className="flex items-center gap-3 mb-4">
-          <Workflow className="h-6 w-6 text-primary" />
-          <h2 className="text-2xl font-bold">GenAI Agent Orchestration</h2>
+      <Card className="p-4 sm:p-6 bg-gradient-surface border-border">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <Workflow className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <h2 className="text-lg sm:text-2xl font-bold">GenAI Agent Orchestration</h2>
         </div>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
           This autonomous platform uses six specialized AI agents coordinated by Google Cloud Agent Builder to continuously optimize cement plant operations. 
           The system observes real-time telemetry, predicts outcomes, proposes optimizations, validates safety, and executes approved actions—all with explainable AI and human oversight.
         </p>
 
         {/* Workflow Timeline */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mt-4 sm:mt-6">
           {workflow.map((item) => (
-            <Card key={item.step} className={`p-4 border transition-all hover:shadow-card ${item.color}`}>
+            <Card key={item.step} className={`p-3 sm:p-4 border transition-all hover:shadow-card ${item.color}`}>
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-xs sm:text-sm">
                   {item.step}
                 </div>
-                <h3 className="font-semibold text-sm">{item.name}</h3>
+                <h3 className="font-semibold text-xs sm:text-sm">{item.name}</h3>
               </div>
-              <p className="text-xs text-muted-foreground">{item.description}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{item.description}</p>
             </Card>
           ))}
         </div>
       </Card>
 
       {/* Agents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {agents.map((agent, idx) => {
           const Icon = agent.icon;
           return (
-            <Card key={idx} className="p-6 bg-gradient-surface border-border transition-all hover:shadow-card">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/20">
-                    <Icon className="h-5 w-5 text-primary" />
+            <Card key={idx} className="p-4 sm:p-6 bg-gradient-surface border-border transition-all hover:shadow-card">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/20">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">{agent.name}</h3>
+                    <h3 className="font-semibold text-xs sm:text-sm">{agent.name}</h3>
                   </div>
                 </div>
-                <Badge className={getStatusColor(agent.status)}>
+                <Badge className={`${getStatusColor(agent.status)} text-xs self-start sm:self-auto`}>
                   {agent.status}
                 </Badge>
               </div>
 
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                 {agent.description}
               </p>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5 sm:space-y-3">
                 <div>
-                  <h4 className="text-xs font-semibold text-foreground mb-2">Key Capabilities</h4>
-                  <ul className="space-y-1">
+                  <h4 className="text-[10px] sm:text-xs font-semibold text-foreground mb-1.5 sm:mb-2">Key Capabilities</h4>
+                  <ul className="space-y-0.5 sm:space-y-1">
                     {agent.capabilities.map((cap, capIdx) => (
-                      <li key={capIdx} className="text-xs text-muted-foreground flex items-start gap-2">
+                      <li key={capIdx} className="text-[10px] sm:text-xs text-muted-foreground flex items-start gap-1.5 sm:gap-2">
                         <span className="text-primary mt-0.5">•</span>
                         <span>{cap}</span>
                       </li>
@@ -163,10 +163,10 @@ const AgentsOverview = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold text-foreground mb-2">Technologies</h4>
-                  <div className="flex flex-wrap gap-1">
+                  <h4 className="text-[10px] sm:text-xs font-semibold text-foreground mb-1.5 sm:mb-2">Technologies</h4>
+                  <div className="flex flex-wrap gap-1 sm:gap-1.5">
                     {agent.tech.map((tech, techIdx) => (
-                      <Badge key={techIdx} variant="outline" className="text-xs">
+                      <Badge key={techIdx} variant="outline" className="text-[9px] sm:text-xs">
                         {tech}
                       </Badge>
                     ))}
@@ -179,51 +179,51 @@ const AgentsOverview = () => {
       </div>
 
       {/* How It Works */}
-      <Card className="p-6 bg-gradient-surface border-border">
-        <div className="flex items-center gap-3 mb-4">
-          <TrendingUp className="h-6 w-6 text-primary" />
-          <h2 className="text-xl font-bold">How the Dashboard Works</h2>
+      <Card className="p-4 sm:p-6 bg-gradient-surface border-border">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <h2 className="text-base sm:text-xl font-bold">How the Dashboard Works</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
               Real-Time Telemetry Tab
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Displays live operational metrics including energy efficiency, mill power, kiln temperature, throughput, and thermal substitution rates. 
               Data is ingested every minute from PLCs and updated with trend indicators comparing current performance to the last hour.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Brain className="h-4 w-4 text-primary" />
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+              <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
               AI Optimization Tab
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Shows AI-generated optimization proposals with predicted impact on energy consumption and quality. Each proposal includes Gemini-generated rationale 
               and has passed through the Safety Gate. Operators can approve or reject recommendations with full audit logging.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary" />
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
               Operator Assistant Tab
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Gemini-powered conversational interface that answers questions about current operations, explains AI decisions, provides historical context, 
               and helps troubleshoot issues using natural language. All responses are grounded in real telemetry data.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
               System Overview Tab
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               This tab provides visibility into the agent orchestration architecture, explaining how each agent contributes to the autonomous optimization loop 
               and what technologies power the platform.
             </p>

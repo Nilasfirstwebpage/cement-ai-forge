@@ -75,68 +75,68 @@ const ChatAssistant = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
       {/* Chat Interface */}
-      <Card className="lg:col-span-2 flex flex-col h-[700px] bg-gradient-surface">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center">
-              <Bot className="h-6 w-6 text-primary-foreground" />
+      <Card className="lg:col-span-2 flex flex-col h-[500px] sm:h-[600px] lg:h-[700px] bg-gradient-surface">
+        <div className="p-4 sm:p-6 border-b border-border">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-primary flex items-center justify-center">
+              <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold">Gemini Operations Assistant</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-sm sm:text-base font-semibold">Gemini Operations Assistant</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 AI-powered plant intelligence
               </p>
             </div>
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-6">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 p-4 sm:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${
+                className={`flex gap-2 sm:gap-3 ${
                   message.role === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
                 {message.role === 'assistant' && (
-                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-5 w-5 text-primary" />
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                 )}
                 <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
+                  className={`max-w-[85%] sm:max-w-[80%] rounded-lg p-3 sm:p-4 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-card border border-border'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
-                  <p className={`text-xs mt-2 ${
+                  <p className="text-xs sm:text-sm leading-relaxed">{message.content}</p>
+                  <p className={`text-[10px] sm:text-xs mt-1.5 sm:mt-2 ${
                     message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
                   }`}>
                     {message.timestamp.toLocaleTimeString()}
                   </p>
                 </div>
                 {message.role === 'user' && (
-                  <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-                    <User className="h-5 w-5 text-accent-foreground" />
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-accent-foreground" />
                   </div>
                 )}
               </div>
             ))}
             {loading && (
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Bot className="h-5 w-5 text-primary animate-pulse" />
+              <div className="flex gap-2 sm:gap-3">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
                 </div>
-                <div className="bg-card border border-border rounded-lg p-4">
+                <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
                   <div className="flex gap-2">
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" />
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.2s' }} />
-                    <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.4s' }} />
+                    <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-muted-foreground animate-bounce" />
+                    <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.4s' }} />
                   </div>
                 </div>
               </div>
@@ -144,51 +144,52 @@ const ChatAssistant = () => {
           </div>
         </ScrollArea>
 
-        <div className="p-6 border-t border-border">
+        <div className="p-3 sm:p-4 lg:p-6 border-t border-border">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about plant operations, optimization decisions, or performance metrics..."
-              className="flex-1"
+              placeholder="Ask about operations..."
+              className="flex-1 text-xs sm:text-sm"
               disabled={loading}
             />
             <Button 
               onClick={handleSend} 
               disabled={loading || !input.trim()}
-              className="bg-gradient-primary"
+              className="bg-gradient-primary px-3 sm:px-4"
+              size="sm"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
       </Card>
 
       {/* Quick Actions & Context */}
-      <div className="space-y-6">
-        <Card className="p-6 bg-gradient-surface">
-          <h4 className="font-semibold mb-4">Quick Questions</h4>
+      <div className="space-y-4 sm:space-y-6">
+        <Card className="p-4 sm:p-6 bg-gradient-surface">
+          <h4 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4">Quick Questions</h4>
           <div className="space-y-2">
             {quickPrompts.map((prompt, idx) => (
               <Button
                 key={idx}
                 variant="outline"
-                className="w-full justify-start text-left h-auto py-3 px-4"
+                className="w-full justify-start text-left h-auto py-2.5 sm:py-3 px-3 sm:px-4"
                 onClick={() => {
                   setInput(prompt);
                   setTimeout(() => handleSend(), 100);
                 }}
               >
-                <span className="text-sm">{prompt}</span>
+                <span className="text-xs sm:text-sm">{prompt}</span>
               </Button>
             ))}
           </div>
         </Card>
 
-        <Card className="p-6 bg-gradient-surface">
-          <h4 className="font-semibold mb-4">Assistant Capabilities</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+        <Card className="p-4 sm:p-6 bg-gradient-surface">
+          <h4 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4">Assistant Capabilities</h4>
+          <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
               <span>Explain optimization decisions in plain language</span>
@@ -212,9 +213,9 @@ const ChatAssistant = () => {
           </ul>
         </Card>
 
-        <Card className="p-6 bg-gradient-surface border-primary/30">
-          <h4 className="font-semibold mb-2 text-primary">Powered by Gemini</h4>
-          <p className="text-sm text-muted-foreground">
+        <Card className="p-4 sm:p-6 bg-gradient-surface border-primary/30">
+          <h4 className="text-sm sm:text-base font-semibold mb-2 text-primary">Powered by Gemini</h4>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             This assistant uses Google's Gemini AI model to provide intelligent, context-aware responses about your cement plant operations.
           </p>
         </Card>

@@ -10,16 +10,16 @@ const SystemHealth = () => {
   ];
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
       {services.map((service, idx) => {
         const Icon = service.icon;
         return (
-          <div key={idx} className="flex items-center gap-2">
-            <Icon className={`h-4 w-4 ${service.color}`} />
-            <span className="text-sm text-muted-foreground hidden lg:inline">
+          <div key={idx} className="flex items-center gap-1.5 sm:gap-2">
+            <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${service.color}`} />
+            <span className="text-xs sm:text-sm text-muted-foreground hidden md:inline">
               {service.name}
             </span>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-[10px] sm:text-xs">
               {service.status}
             </Badge>
           </div>
