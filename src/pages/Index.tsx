@@ -1,28 +1,39 @@
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TelemetryDashboard from '@/components/dashboard/TelemetryDashboard';
 import OptimizationPanel from '@/components/dashboard/OptimizationPanel';
 import ChatAssistant from '@/components/dashboard/ChatAssistant';
 import SystemHealth from '@/components/dashboard/SystemHealth';
 import AgentsOverview from '@/components/dashboard/AgentsOverview';
-import { Activity, Brain, MessageSquare, Shield, Network } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Activity, Brain, MessageSquare, Network, ArrowLeft, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('telemetry');
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-gradient-surface">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate('/')}
+                className="h-8 w-8 sm:h-9 sm:w-9"
+              >
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
               <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow">
                 <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">
+                <h1 className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-foreground">
                   Cement Plant AI Operations
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">
@@ -30,7 +41,10 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <SystemHealth />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <SystemHealth />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
