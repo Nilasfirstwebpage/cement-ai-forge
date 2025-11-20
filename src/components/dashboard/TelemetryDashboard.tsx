@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Activity, Zap, Flame, Gauge, TrendingDown, TrendingUp } from 'lucide-react';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import KilnOperation from '@/components/KilnOperation';
 
 const TelemetryDashboard = () => {
   const { latestData, trends, loading, history } = useTelemetry();
@@ -87,6 +88,8 @@ const TelemetryDashboard = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Kiln Operation Section */}
+      <KilnOperation />
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {metrics.map((metric, idx) => {
