@@ -9,10 +9,12 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Activity, Brain, MessageSquare, Network, ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useTelemetry } from '@/hooks/useTelemetry';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('telemetry');
   const navigate = useNavigate();
+  const { latestData, trends, loading, history } = useTelemetry();
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,15 +78,15 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="telemetry" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
-            <TelemetryDashboard />
+            <TelemetryDashboard latestData={latestData} trends={trends} loading={loading} history={history} />
           </TabsContent>
 
           <TabsContent value="optimization" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
-            <OptimizationPanel />
+            <OptimizationPanel latestTelemetryData={latestData} />
           </TabsContent>
 
           <TabsContent value="assistant" className="mt-4 sm:mt-6">
-            <ChatAssistant />
+            <ChatAssistant latestData={latestData} />
           </TabsContent>
 
           <TabsContent value="agents" className="mt-4 sm:mt-6">

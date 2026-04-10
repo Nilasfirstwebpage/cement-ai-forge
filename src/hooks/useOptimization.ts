@@ -1,77 +1,77 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from "react";
+import { Proposal as OptimizationProposal } from "@/components/dashboard/vertexAiService";
+import { TelemetryData } from "./useTelemetry";
 
-interface OptimizationProposal {
-  id: string;
-  timestamp: string;
-  action: string;
-  expected_energy_delta_kwh_ton: number;
-  expected_quality_impact: 'negligible' | 'minor' | 'moderate';
-  confidence: number;
-  rationale: string;
-  risk_level: 'low' | 'medium' | 'high';
-  safety_gate_decision: 'approved' | 'rejected' | 'escalated';
-  safety_rejection_reason?: string;
-}
+export const useOptimization = (
+  initialProposals: OptimizationProposal[] = [
+    {
+      id: 'mock-1',
+      action: 'Increase Kiln Temperature by 5°C',
+      rationale: 'Based on current raw material analysis, a slight increase in kiln temperature will improve clinker quality and reduce fuel consumption by 1.5%.',
+      expected_energy_delta_kwh_ton: -1.5,
+      expected_quality_impact: 'negligible',
+      risk_level: 'low',
+      confidence: 0.95,
+      safety_gate_decision: 'approved',
+      timestamp: new Date().toISOString(),
+    },
+    {
+      id: 'mock-2',
+      action: 'Adjust Coal Mill Fan Speed to 80%',
+      rationale: 'Optimizing coal mill fan speed will achieve finer grinding, leading to better combustion efficiency and a 0.8% reduction in NOx emissions.',
+      expected_energy_delta_kwh_ton: -0.7,
+      expected_quality_impact: 'minor',
+      risk_level: 'medium',
+      confidence: 0.88,
+      safety_gate_decision: 'escalated',
+      safety_rejection_reason: 'Potential for increased noise pollution.',
+      timestamp: new Date(Date.now() - 3600 * 1000).toISOString(), // 1 hour ago
+    },
+    {
+      id: 'mock-3',
+      action: 'Reduce Cooler Grate Speed by 10%',
+      rationale: 'Slower grate speed will allow for more efficient heat recovery in the clinker cooler, recapturing 0.5 GCal/ton of heat and decreasing overall energy demand.',
+      expected_energy_delta_kwh_ton: -1.0,
+      expected_quality_impact: 'negligible',
+      risk_level: 'low',
+      confidence: 0.92,
+      safety_gate_decision: 'approved',
+      timestamp: new Date(Date.now() - 7200 * 1000).toISOString(), // 2 hours ago
+    },
+  ],
+  initialHistory: any[] = [
+    { time: '14:23', action: 'Reduced mill power to 1235 kW', result: '-3.8 kWh/ton', status: 'success' },
+    { time: '13:18', action: 'Increased separator efficiency target', result: '-2.1 kWh/ton', status: 'success' },
+    { time: '12:05', action: 'Adjusted fuel mix ratio', result: 'Rejected by operator', status: 'rejected' }
+  ]
+) => {
+  const [proposals, setProposals] = useState<OptimizationProposal[]>(initialProposals);
+  const [history, setHistory] = useState(initialHistory);
+  const [loading, setLoading] = useState(false);
 
-export const useOptimization = () => {
-  const [proposals, setProposals] = useState<OptimizationProposal[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Generate synthetic proposals for demo
-    const generateProposals = (): OptimizationProposal[] => {
-      const sampleProposals = [
-        {
-          id: 'opt_001',
-          timestamp: new Date().toISOString(),
-          action: 'Reduce mill power to 1235 kW',
-          expected_energy_delta_kwh_ton: -3.8,
-          expected_quality_impact: 'negligible' as const,
-          confidence: 0.87,
-          rationale: 'Current separator efficiency is 88%, allowing 50kW reduction without throughput loss. Raw moisture is low (1.8%), supporting grinding efficiency. Historical data shows similar conditions resulted in 3.5 kWh/ton savings with no quality degradation.',
-          risk_level: 'low' as const,
-          safety_gate_decision: 'approved' as const
-        },
-        {
-          id: 'opt_002',
-          timestamp: new Date(Date.now() - 300000).toISOString(),
-          action: 'Increase biomass fuel ratio to 28%',
-          expected_energy_delta_kwh_ton: -1.2,
-          expected_quality_impact: 'minor' as const,
-          confidence: 0.73,
-          rationale: 'Kiln temperature is stable at 1418°C with margin for alternative fuel increase. Biomass calorific value is within acceptable range (16.2 MJ/kg). This change will improve thermal substitution rate while maintaining clinker quality. Recommended gradual implementation over 2 hours.',
-          risk_level: 'medium' as const,
-          safety_gate_decision: 'approved' as const
-        }
-      ];
-
-      return sampleProposals;
-    };
-
-    setProposals(generateProposals());
-    setLoading(false);
-
-    // Simulate new proposals appearing
-    const interval = setInterval(() => {
-      // Random chance of new proposal
-      if (Math.random() > 0.7) {
-        const newProposal = generateProposals()[0];
-        newProposal.id = `opt_${Date.now()}`;
-        newProposal.timestamp = new Date().toISOString();
-        setProposals(prev => [newProposal, ...prev].slice(0, 3));
-      }
-    }, 30000); // Every 30 seconds
-
-    return () => clearInterval(interval);
+  const addProposal = useCallback((proposal: OptimizationProposal) => {
+    setProposals((prev) => [proposal, ...prev]);
   }, []);
 
   const approveProposal = (id: string) => {
-    setProposals(prev => prev.filter(p => p.id !== id));
+    setProposals((prev) => prev.filter((p) => p.id !== id));
   };
 
   const rejectProposal = (id: string) => {
-    setProposals(prev => prev.filter(p => p.id !== id));
+    setProposals((prev) => prev.filter((p) => p.id !== id));
   };
 
-  return { proposals, loading, approveProposal, rejectProposal };
+  const addHistoryEntry = useCallback((historyItem: any) => {
+    setHistory(prevHistory => [historyItem, ...prevHistory]);
+  }, []);
+
+  return {
+    proposals,
+    loading,
+    addProposal,
+    approveProposal,
+    rejectProposal,
+    history,
+    addHistoryEntry,
+  };
 };

@@ -79,6 +79,11 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes blink {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -1,215 +1,227 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Flame, TrendingUp, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import kilnFlameImage from '@/assets/kiln-flame.png';
+import { useState, useRef } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Flame,
+  BrainCircuit,
+  AlertTriangle,
+  Upload,
+  AlertCircle,
+} from "lucide-react";
+import kilnFlameImage from "@/assets/kiln-flame.png";
+import { analyzeImage } from "@/services/visionService";
+import {
+  getKilnAnalysisFromAi,
+  KilnAnalysis,
+} from "@/components/dashboard/vertexAiService";
 
-interface FlameAnalysis {
-  flameTemp: number;
-  coreBrightness: number;
-  thermalUniformity: number;
-  turbulenceIndex: number;
-  fuelAirBalance: 'Rich' | 'Lean' | 'OK';
-  volatileBurningEfficiency: number;
-  combustionHealthScore: number;
-  efficiencyScore: number;
-  riskLevel: number;
-  recommendedActions: string[];
-  advancedMetrics: {
-    noxProxy: number;
-    ringFormationProbability: number;
-    refractoryStressLevel: number;
-  };
-}
+type VisionAnalysisResults = any;
 
 const KilnOperation = () => {
-  // Synthetic flame analysis data
-  const [analysis] = useState<FlameAnalysis>({
-    flameTemp: 1847,
-    coreBrightness: 0.87,
-    thermalUniformity: 92.3,
-    turbulenceIndex: 0.34,
-    fuelAirBalance: 'OK',
-    volatileBurningEfficiency: 94.2,
-    combustionHealthScore: 89,
-    efficiencyScore: 91,
-    riskLevel: 0.12,
-    recommendedActions: [
-      'Maintain current fuel-air ratio for optimal combustion',
-      'Monitor core brightness for early detection of fuel quality changes',
-      'Consider slight reduction in secondary air to improve thermal uniformity',
-      'Schedule refractory inspection within 120 operating hours',
-    ],
-    advancedMetrics: {
-      noxProxy: 245,
-      ringFormationProbability: 0.08,
-      refractoryStressLevel: 0.23,
-    },
-  });
+  const [analysis, setAnalysis] = useState<KilnAnalysis | null>(null);
+  const [visionResults, setVisionResults] = useState<VisionAnalysisResults | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [imageToAnalyze, setImageToAnalyze] = useState<string>(kilnFlameImage);
 
-  const getRiskColor = (risk: number) => {
-    if (risk < 0.3) return 'text-success';
-    if (risk < 0.6) return 'text-warning';
-    return 'text-destructive';
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Create a URL for the uploaded file to display it
+      const newImageUrl = URL.createObjectURL(file);
+      setImageToAnalyze(newImageUrl);
+      // Reset previous analysis
+      setAnalysis(null);
+      setVisionResults(null);
+      setError(null);
+    }
   };
 
-  const getRiskBadge = (risk: number) => {
-    if (risk < 0.3) return <Badge className="bg-success">Low Risk</Badge>;
-    if (risk < 0.6) return <Badge className="bg-warning">Medium Risk</Badge>;
-    return <Badge className="bg-destructive">High Risk</Badge>;
+  const handleAnalyzeClick = async () => {
+    setLoading(true);
+    setError(null);
+    setAnalysis(null);
+    setVisionResults(null);
+
+    try {
+      const visionData = await analyzeImage(imageToAnalyze);
+      setVisionResults(visionData);
+      if (!visionData?.responses?.[0]?.labelAnnotations?.length) {
+        throw new Error("Could not detect any features from the image. Please try a different one.");
+      }
+
+      const generatedMetrics = await getKilnAnalysisFromAi(visionData);
+      console.log(generatedMetrics);
+      setAnalysis(generatedMetrics);
+    } catch (err: any) {
+      setError(err.message || "An unknown error occurred during analysis.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getBalanceColor = (balance: string) => {
-    if (balance === 'OK') return 'text-success';
-    if (balance === 'Lean') return 'text-warning';
-    return 'text-destructive';
+  const getRiskColor = (risk: number | undefined) => {
+    if (risk === undefined) return "text-muted-foreground";
+    if (risk < 0.3) return "text-success";
+    if (risk < 0.6) return "text-warning";
+    return "text-destructive";
   };
+
+  const labels = visionResults?.responses?.[0]?.labelAnnotations;
 
   return (
     <Card className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-gradient-alert flex items-center justify-center">
-            <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+          <div className="h-10 w-10 rounded-lg bg-gradient-alert flex items-center justify-center">
+            <Flame className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold">Kiln Flame Analysis</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">Cloud Vision + Vertex AI Inference</p>
+            <h3 className="text-lg font-semibold">Kiln Flame Analysis</h3>
+            <p className="text-sm text-muted-foreground">
+              Upload an image and run AI analysis.
+            </p>
           </div>
         </div>
-        {getRiskBadge(analysis.riskLevel)}
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            className="hidden"
+            accept="image/*"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Image
+          </Button>
+          <Button onClick={handleAnalyzeClick} disabled={loading}>
+            {loading ? (
+              "Analyzing..."
+            ) : (
+              <>
+                <BrainCircuit className="h-4 w-4 mr-2" /> Analyze Flame
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Flame Image */}
-        <div className="space-y-3 sm:space-y-4">
-          <div className="relative rounded-lg overflow-hidden border border-border shadow-card">
-            <img 
-              src={kilnFlameImage} 
-              alt="Kiln Flame" 
-              className="w-full h-48 sm:h-64 lg:h-80 object-cover"
-            />
-            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-background/90 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-border">
-              <p className="text-xs sm:text-sm font-medium">Live Camera Feed</p>
-            </div>
+      {error && (
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border-destructive/30">
+          <AlertTriangle className="h-6 w-6 text-destructive" />
+          <div>
+            <h4 className="font-semibold text-destructive">Analysis Failed</h4>
+            <p className="text-sm text-destructive/80">{error}</p>
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Image captured: {new Date().toLocaleTimeString()} • Resolution: 1920x1080
-          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="relative rounded-lg overflow-hidden border shadow-card">
+            <img
+              src={imageToAnalyze}
+              alt="Kiln Flame"
+              className="w-full h-auto object-cover"
+            />
+          </div>
+          {labels && (
+            <div>
+              <h4 className="text-sm font-semibold mb-2">
+                Detected Image Labels
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {labels.map((label: any) => (
+                  <Badge key={label.mid} variant="secondary">
+                    {label.description} ({(label.score * 100).toFixed(1)}%)
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Analysis Report */}
-        <div className="space-y-3 sm:space-y-4">
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Flame Temperature</p>
-              <p className="text-lg sm:text-2xl font-bold">{analysis.flameTemp}°C</p>
-            </div>
-            <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Core Brightness</p>
-              <p className="text-lg sm:text-2xl font-bold">{analysis.coreBrightness.toFixed(2)}</p>
-            </div>
-            <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Thermal Uniformity</p>
-              <p className="text-lg sm:text-2xl font-bold">{analysis.thermalUniformity}%</p>
-            </div>
-            <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Turbulence Index</p>
-              <p className="text-lg sm:text-2xl font-bold">{analysis.turbulenceIndex.toFixed(2)}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-            <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Fuel-Air Balance</p>
-              <p className={`text-base sm:text-lg font-bold ${getBalanceColor(analysis.fuelAirBalance)}`}>
-                {analysis.fuelAirBalance}
+        <div className="space-y-4">
+          {!analysis && !loading && !error && (
+            <div className="h-full flex items-center justify-center text-center p-8 border-2 border-dashed rounded-lg">
+              <p className="text-muted-foreground">
+                Upload an image and click "Analyze Flame" to generate a full AI
+                analysis.
               </p>
             </div>
-            <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Volatile Burning Eff.</p>
-              <p className="text-base sm:text-lg font-bold">{analysis.volatileBurningEfficiency}%</p>
+          )}
+          {loading && (
+            <div className="h-full flex items-center justify-center text-center p-8">
+              <p className="text-muted-foreground">
+                Generating full AI analysis... This may take a moment.
+              </p>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <div className="p-3 sm:p-4 rounded-lg bg-gradient-success border border-success/20">
-              <p className="text-xs text-success-foreground/80 mb-1">Combustion Health</p>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-success-foreground" />
-                <p className="text-lg sm:text-2xl font-bold text-success-foreground">{analysis.combustionHealthScore}</p>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 rounded-lg bg-gradient-primary border border-primary/20">
-              <p className="text-xs text-primary-foreground/80 mb-1">Efficiency Score</p>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
-                <p className="text-lg sm:text-2xl font-bold text-primary-foreground">{analysis.efficiencyScore}</p>
-              </div>
-            </div>
-          </div>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full text-xs sm:text-sm">
-                <Info className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                View Advanced Metrics
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Advanced Flame Analysis Metrics</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-lg bg-muted">
-                    <p className="text-sm text-muted-foreground mb-2">NOx Proxy (ppm)</p>
-                    <p className="text-2xl font-bold">{analysis.advancedMetrics.noxProxy}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Within limits</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted">
-                    <p className="text-sm text-muted-foreground mb-2">Ring Formation Risk</p>
-                    <p className="text-2xl font-bold">{(analysis.advancedMetrics.ringFormationProbability * 100).toFixed(1)}%</p>
-                    <p className="text-xs text-success mt-1">Low probability</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted">
-                    <p className="text-sm text-muted-foreground mb-2">Refractory Stress</p>
-                    <p className="text-2xl font-bold">{(analysis.advancedMetrics.refractoryStressLevel * 100).toFixed(1)}%</p>
-                    <p className="text-xs text-success mt-1">Normal range</p>
-                  </div>
+          )}
+          {analysis && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Flame Temp
+                  </p>
+                  <p className="text-2xl font-bold">{analysis.flameTemperature_C}°C</p>
                 </div>
-                <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-sm font-medium mb-2">Technical Notes</p>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>• NOx proxy calculated from flame temperature and oxygen concentration</li>
-                    <li>• Ring formation risk based on thermal profile and material chemistry</li>
-                    <li>• Refractory stress derived from temperature gradients and hotspot analysis</li>
-                    <li>• All metrics updated every 5 seconds via Cloud Vision API</li>
-                  </ul>
+                <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Specific Heat
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {analysis.specificHeatConsumption_kCalPerKgClinker}
+                    <span className="text-sm"> kCal/kg</span>
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg bg-gradient-primary border border-success/20">
+                  <p className="text-xs text-success-foreground/80 mb-1">
+                    Combustion Health
+                  </p>
+                  <p className="text-2xl font-bold text-success-foreground">
+                    {analysis.combustionHealthScore.toFixed(0)}
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg bg-gradient-primary border border-primary/20">
+                  <p className="text-xs text-primary-foreground/80 mb-1">
+                    Kiln Heat Efficiency
+                  </p>
+                  <p className="text-2xl font-bold text-primary-foreground">
+                    {analysis.kilnHeatEfficiency_percent.toFixed(1)}%
+                  </p>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Recommended Actions */}
-      <div className="space-y-2 sm:space-y-3">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-          <h4 className="text-sm sm:text-base font-semibold">Recommended Actions</h4>
-        </div>
-        <div className="space-y-1.5 sm:space-y-2">
-          {analysis.recommendedActions.map((action, index) => (
-            <div key={index} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-muted/30 border border-border">
-              <div className={`h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${getRiskColor(analysis.riskLevel)} bg-muted`}>
-                {index + 1}
+              <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Kiln Operating State
+                  </p>
+                  <p className="text-xl">{analysis.kilnOperatingState}</p>
+                </div>
+              <div>
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-primary" />
+                  AI Recommended Action
+                </h4>
+                <div className="mt-2">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/40">
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${getRiskColor(analysis.operationalRiskLevel)} bg-muted`}>
+                      !
+                    </div>
+                    <p className="text-sm text-foreground pt-0.5">{analysis.recommendedOperatorAction}</p>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs sm:text-sm text-foreground pt-0.5">{action}</p>
-            </div>
-          ))}
+            </>
+          )}
         </div>
       </div>
     </Card>

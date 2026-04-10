@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { getGeminiChatResponse } from './vertexAiService';
+import { TelemetryData } from '@/hooks/useTelemetry';
 
 interface Message {
   id: string;
@@ -13,7 +15,11 @@ interface Message {
   timestamp: Date;
 }
 
-const ChatAssistant = () => {
+interface ChatAssistantProps {
+  latestData: TelemetryData | null;
+}
+
+const ChatAssistant = ({ latestData }: ChatAssistantProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -25,14 +31,6 @@ const ChatAssistant = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const sampleResponses = [
-    "Based on current telemetry, your energy efficiency is trending well at 94.2 kWh/ton, which is below the target of 95 kWh/ton. The main contributing factors are optimal raw moisture content (1.9%) and efficient separator operation (86.5%).",
-    "The recent optimization to reduce mill power was successful because the separator efficiency was running above normal (88%), indicating excess grinding capacity. This allowed us to reduce power while maintaining throughput.",
-    "Current thermal substitution rate is 26.8%. To reach the 30% target, I recommend gradually increasing biomass proportion by 2-3% over the next 4 hours, provided kiln temperature remains stable above 1400°C.",
-    "The kiln temperature is currently at 1412°C, which is within the safe operating range of 1350-1450°C. This temperature is optimal for clinker formation with your current raw material chemistry (CaO: 62.1%).",
-    "Quality variance over the past 24 hours has been low (±1.3 MPa), indicating stable production. The main factors contributing to this stability are consistent raw material chemistry and steady kiln operation."
-  ];
-
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -43,21 +41,33 @@ const ChatAssistant = () => {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setLoading(true);
 
-    // Simulate AI response (replace with actual Gemini API call)
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: sampleResponses[Math.floor(Math.random() * sampleResponses.length)],
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-      setLoading(false);
-    }, 1500);
+    try {
+        const responseContent = await getGeminiChatResponse(newMessages, latestData);
+        const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: responseContent,
+            timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+        console.error("Error getting response from Gemini:", error);
+        toast.error("An error occurred while fetching the AI response.");
+        const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
+            timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

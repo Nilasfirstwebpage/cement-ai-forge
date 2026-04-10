@@ -1,101 +1,127 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { TelemetryData } from '../types/telemetry';
+import { connectTelemetrySocket } from '../services/telemetrySocket';
+import { getTelemetryHistory } from '../pages/firestoreService';
 
-interface TelemetryData {
-  timestamp: string;
-  mill_power_kw: number;
-  mill_throughput_tph: number;
-  separator_efficiency: number;
-  kiln_temp_c: number;
-  cooler_fan_rpm: number;
-  raw_caO: number;
-  raw_siO2: number;
-  raw_al2O3: number;
-  raw_fe2O3: number;
-  raw_moisture: number;
-  clinker_temp_c: number;
-  fuel_mix: string;
-  energy_per_ton_kwh: number;
-  thermal_substitution_rate: number;
-  time?: string;
-}
+// Function to load CSV data as fallback
+const loadCSVData = async (): Promise<TelemetryData[]> => {
+  try {
+    const response = await fetch('/records_export.csv');
+    const csvText = await response.text();
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(',');
 
-interface Trends {
-  energy: number;
-  power: number;
-  kiln_temp: number;
-  throughput: number;
-  thermal_sub: number;
-  separator: number;
-}
+    return lines.slice(1).map(line => {
+      // Parse CSV line properly handling quoted fields
+      const values: string[] = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            // Escaped quote
+            current += '"';
+            i++; // Skip next quote
+          } else {
+            // Toggle quote state
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          // Field separator
+          values.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current); // Add last field
+
+      const obj: any = {};
+
+      headers.forEach((header, index) => {
+        const value = values[index] || '';
+        // Parse numeric values
+        if (['mill_power_kw', 'mill_throughput_tph', 'separator_efficiency', 'kiln_temp_c', 'cooler_fan_rpm', 'raw_caO', 'raw_siO2', 'raw_al2O3', 'raw_fe2O3', 'raw_moisture', 'clinker_temp_c', 'energy_per_ton_kwh', 'thermal_substitution_rate'].includes(header)) {
+          obj[header] = value ? parseFloat(value) : 0;
+        } else if (header === 'fuel_mix') {
+          try {
+            // fuel_mix is already a JSON string in the CSV, parse it directly
+            obj[header] = value ? JSON.parse(value) : [];
+          } catch (e) {
+            console.warn('Failed to parse fuel_mix:', value, e);
+            obj[header] = [];
+          }
+        } else {
+          obj[header] = value;
+        }
+      });
+
+      return obj as TelemetryData;
+    });
+  } catch (error) {
+    console.error('Error loading CSV data:', error);
+    return [];
+  }
+};
 
 export const useTelemetry = () => {
   const [latestData, setLatestData] = useState<TelemetryData | null>(null);
-  const [trends, setTrends] = useState<Trends | null>(null);
   const [history, setHistory] = useState<TelemetryData[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const socketRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
-    // Generate realistic synthetic telemetry for demo
-    const generateSyntheticData = (): TelemetryData => {
-      const baseEnergy = 94 + Math.random() * 8; // 94-102 kWh/ton
-      const basePower = 1200 + Math.random() * 150; // 1200-1350 kW
-      const baseThroughput = 80 + Math.random() * 10; // 80-90 TPH
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
-      return {
-        timestamp: new Date().toISOString(),
-        mill_power_kw: basePower,
-        mill_throughput_tph: baseThroughput,
-        separator_efficiency: 0.82 + Math.random() * 0.08,
-        kiln_temp_c: 1395 + Math.random() * 30,
-        cooler_fan_rpm: 820 + Math.random() * 60,
-        raw_caO: 61.5 + Math.random() * 2,
-        raw_siO2: 20.5 + Math.random() * 1,
-        raw_al2O3: 5.2 + Math.random() * 0.6,
-        raw_fe2O3: 3.0 + Math.random() * 0.4,
-        raw_moisture: 1.8 + Math.random() * 0.5,
-        clinker_temp_c: 1130 + Math.random() * 40,
-        fuel_mix: JSON.stringify([
-          { fuel: 'coal', '%': 52 + Math.random() * 6 },
-          { fuel: 'biomass', '%': 24 + Math.random() * 4 },
-          { fuel: 'petcoke', '%': 18 + Math.random() * 4 }
-        ]),
-        energy_per_ton_kwh: baseEnergy,
-        thermal_substitution_rate: 24 + Math.random() * 8,
-        time: timeStr
-      };
+    const initializeTelemetry = async () => {
+      try {
+        // First try to get data from Firestore
+        const firestoreHistory = await getTelemetryHistory(50); // Get up to 50 records
+
+        if (firestoreHistory.length >= 10) {
+          // Use Firestore data if we have enough records
+          setHistory(firestoreHistory);
+          if (firestoreHistory.length > 0) {
+            setLatestData(firestoreHistory[0]);
+          }
+        } else {
+          // Fall back to CSV data if less than 10 records in Firestore
+          console.log('Insufficient Firestore data, loading CSV fallback');
+          const csvData = await loadCSVData();
+          setHistory(csvData.slice(0, 20)); // Use first 20 CSV records
+          if (csvData.length > 0) {
+            setLatestData(csvData[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing telemetry:', error);
+        // Fall back to CSV on error
+        const csvData = await loadCSVData();
+        setHistory(csvData.slice(0, 20));
+        if (csvData.length > 0) {
+          setLatestData(csvData[0]);
+        }
+      }
+
+      // Set up real-time updates
+      socketRef.current = connectTelemetrySocket((data) => {
+        setLatestData(data);
+        setHistory((prev) => {
+          const updated = [data, ...prev];
+          return updated.slice(0, 20); // Keep only latest 20
+        });
+      });
+
+      setLoading(false);
     };
 
-    const generateTrends = (): Trends => ({
-      energy: -2.1 + Math.random() * 4.2, // -2.1% to +2.1%
-      power: -1.5 + Math.random() * 3,
-      kiln_temp: -0.8 + Math.random() * 1.6,
-      throughput: -1.0 + Math.random() * 2.0,
-      thermal_sub: -0.5 + Math.random() * 1.0,
-      separator: -0.3 + Math.random() * 0.6
-    });
+    initializeTelemetry();
 
-    // Initial load
-    const initialData = generateSyntheticData();
-    setLatestData(initialData);
-    setHistory([initialData]);
-    setTrends(generateTrends());
-    setLoading(false);
-
-    // Update telemetry every 5 seconds (simulating real-time updates)
-    const interval = setInterval(() => {
-      const newData = generateSyntheticData();
-      setLatestData(newData);
-      setHistory(prev => {
-        const updated = [...prev, newData];
-        return updated.slice(-20); // Keep last 20 data points
-      });
-      setTrends(generateTrends());
-    }, 5000);
-
-    return () => clearInterval(interval);
+    return () => {
+      socketRef.current?.close();
+    };
   }, []);
 
-  return { latestData, trends, loading, history };
+  return { latestData, history, loading };
 };

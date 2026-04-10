@@ -3,10 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Brain, CheckCircle, XCircle, Clock, AlertTriangle, TrendingDown } from 'lucide-react';
 import { useOptimization } from '@/hooks/useOptimization';
+import { useTelemetry } from '@/hooks/useTelemetry';
+import { TelemetryData } from '@/types/telemetry';
 import { toast } from 'sonner';
+import AgentBuilder from './AgentBuilder';
 
-const OptimizationPanel = () => {
-  const { proposals, loading, approveProposal, rejectProposal } = useOptimization();
+interface OptimizationPanelProps {
+  latestTelemetryData?: TelemetryData | null;
+}
+
+const OptimizationPanel = ({ latestTelemetryData }: OptimizationPanelProps) => {
+  const { proposals, loading, addProposal, approveProposal, rejectProposal, history: optimizationHistory, addHistoryEntry } = useOptimization();
+  const { history: telemetryHistory } = useTelemetry();
 
   const handleApprove = (proposalId: string) => {
     approveProposal(proposalId);
@@ -20,6 +28,10 @@ const OptimizationPanel = () => {
     toast.error('Optimization rejected', {
       description: 'Action will not be applied to plant systems'
     });
+  };
+
+  const handleAnalysisComplete = (historyItem: any) => {
+    addHistoryEntry(historyItem);
   };
 
   if (loading) {
@@ -41,7 +53,7 @@ const OptimizationPanel = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* AI Status Header */}
-      <Card className="p-4 sm:p-6 bg-gradient-primary border-primary/30">
+      {/* <Card className="p-4 sm:p-6 bg-gradient-primary border-primary/30">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-primary-foreground/20 flex items-center justify-center">
@@ -60,7 +72,14 @@ const OptimizationPanel = () => {
             Active
           </Badge>
         </div>
-      </Card>
+      </Card> */}
+
+      {/* Agent Builder */}
+      <AgentBuilder 
+        telemetryHistory={telemetryHistory} 
+        onProposalGenerated={addProposal} 
+        onAnalysisComplete={handleAnalysisComplete}
+      />
 
       {/* Current Proposals */}
       <div className="space-y-3 sm:space-y-4">
@@ -75,10 +94,7 @@ const OptimizationPanel = () => {
           <Card className="p-8 sm:p-12 text-center border-dashed">
             <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
             <p className="text-sm sm:text-base text-muted-foreground">
-              No pending proposals. System is monitoring operations.
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-              Next optimization cycle in 4 minutes
+              No pending proposals. Run the AI Agent to generate recommendations.
             </p>
           </Card>
         ) : (
@@ -198,11 +214,7 @@ const OptimizationPanel = () => {
       <Card className="p-4 sm:p-6 bg-gradient-surface border-border">
         <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Recent Optimization History</h3>
         <div className="space-y-2">
-          {[
-            { time: '14:23', action: 'Reduced mill power to 1235 kW', result: '-3.8 kWh/ton', status: 'success' },
-            { time: '13:18', action: 'Increased separator efficiency target', result: '-2.1 kWh/ton', status: 'success' },
-            { time: '12:05', action: 'Adjusted fuel mix ratio', result: 'Rejected by operator', status: 'rejected' }
-          ].map((item, idx) => (
+          {optimizationHistory.map((item, idx) => (
             <div key={idx} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
               <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <span className="text-xs sm:text-sm text-muted-foreground font-mono">{item.time}</span>

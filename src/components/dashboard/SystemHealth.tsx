@@ -1,12 +1,33 @@
-import { Badge } from '@/components/ui/badge';
-import { Shield, Database, Brain, Activity } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Shield, Database, Brain, Activity } from "lucide-react";
 
 const SystemHealth = () => {
   const services = [
-    { name: 'Safety Gate', status: 'active', icon: Shield, color: 'text-success' },
-    { name: 'BigQuery', status: 'active', icon: Database, color: 'text-success' },
-    { name: 'Vertex AI', status: 'active', icon: Brain, color: 'text-success' },
-    { name: 'Telemetry', status: 'active', icon: Activity, color: 'text-success' }
+    {
+      name: "Telemetry",
+      status: "active",
+      icon: Activity,
+      color: "text-success",
+    },
+    {
+      name: "Optimization",
+      status: "active",
+      icon: Brain,
+      color: "text-success",
+    },
+
+    {
+      name: "Safety Gate",
+      status: "active",
+      icon: Shield,
+      color: "text-success",
+    },
+    {
+      name: "AI Analytics",
+      status: "active",
+      icon: Database,
+      color: "text-success",
+    },
   ];
 
   return (
