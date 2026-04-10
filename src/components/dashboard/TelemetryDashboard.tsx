@@ -30,6 +30,11 @@ interface Trends {
   energy: number;
   temperature: number;
   efficiency: number;
+  power: number;
+  kiln_temp: number;
+  throughput: number;
+  thermal_sub: number;
+  separator: number;
 }
 
 interface TelemetryDashboardProps {

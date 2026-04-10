@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { BrainCircuit } from 'lucide-react';
-import { TelemetryData } from '@/pages/firestoreService';
+import { TelemetryData } from '@/types/telemetry';
 import { getAiRecommendations } from './vertexAiService';
 
 interface AIRecommendationsProps {
