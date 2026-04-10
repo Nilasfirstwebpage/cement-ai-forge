@@ -66,7 +66,7 @@ const loadCSVData = async (): Promise<TelemetryData[]> => {
   }
 };
 
-export { TelemetryData } from '../types/telemetry';
+export type { TelemetryData } from '../types/telemetry';
 
 export const useTelemetry = () => {
   const [latestData, setLatestData] = useState<TelemetryData | null>(null);
