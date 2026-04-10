@@ -14,7 +14,8 @@ import { useTelemetry } from '@/hooks/useTelemetry';
 const Index = () => {
   const [activeTab, setActiveTab] = useState('telemetry');
   const navigate = useNavigate();
-  const { latestData, trends, loading, history } = useTelemetry();
+  const { latestData, loading, history } = useTelemetry();
+  const trends = null;
 
   return (
     <div className="min-h-screen bg-background">
