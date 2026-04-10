@@ -83,9 +83,9 @@ export const useTelemetry = () => {
 
         if (firestoreHistory.length >= 10) {
           // Use Firestore data if we have enough records
-          setHistory(firestoreHistory);
+          setHistory(firestoreHistory as unknown as TelemetryData[]);
           if (firestoreHistory.length > 0) {
-            setLatestData(firestoreHistory[0]);
+            setLatestData(firestoreHistory[0] as unknown as TelemetryData);
           }
         } else {
           // Fall back to CSV data if less than 10 records in Firestore
