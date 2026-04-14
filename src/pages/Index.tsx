@@ -5,7 +5,7 @@ import OptimizationPanel from '@/components/dashboard/OptimizationPanel';
 import ChatAssistant from '@/components/dashboard/ChatAssistant';
 import SystemHealth from '@/components/dashboard/SystemHealth';
 import AgentsOverview from '@/components/dashboard/AgentsOverview';
-import CementProcessDiagram from '@/components/dashboard/CementProcessDiagram';
+import CementPlant3D from '@/components/dashboard/CementPlant3D';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Activity, Brain, MessageSquare, Network, ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ const Index = () => {
         <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)]">
           {/* Left Panel — Cement Process Diagram */}
           <div className="lg:w-[45%] xl:w-[40%] border-b lg:border-b-0 lg:border-r border-border p-3 sm:p-4 overflow-auto">
-            <CementProcessDiagram latestData={latestData} />
+            <CementPlant3D latestData={latestData} />
           </div>
 
           {/* Right Panel — Dashboard Tabs */}
